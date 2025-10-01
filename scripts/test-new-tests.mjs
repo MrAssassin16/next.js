@@ -134,17 +134,10 @@ async function main() {
     // We apply the external tests filter before the process.env so that if
     // it's defined in the environment, it overrides the default filter.
     // This is required for supporting the experimental tests setup.
-    const NEXT_EXTERNAL_TESTS_FILTERS = process.env.NEXT_EXTERNAL_TESTS_FILTERS
-      ? process.env.NEXT_EXTERNAL_TESTS_FILTERS
-      : testMode === 'deploy'
-        ? 'test/deploy-tests-manifest.json'
-        : undefined
-
-    if (NEXT_EXTERNAL_TESTS_FILTERS) {
-      console.log(
-        `Applying external tests filter: ${NEXT_EXTERNAL_TESTS_FILTERS}`
-      )
-    }
+    const NEXT_EXTERNAL_TESTS_FILTERS = getExternalTestFilter(
+      testMode,
+      'webpack'
+    )
 
     await execa('node', [...RUN_TESTS_ARGS, ...currentTests], {
       ...EXECA_OPTS_STDIO,
@@ -158,10 +151,14 @@ async function main() {
     })
   }
 
-  if (isFlakeDetectionMode && testMode !== 'deploy') {
+  if (isFlakeDetectionMode) {
     for (let i = 0; i < attempts; i++) {
       console.log(
         `\n\nRun ${i + 1}/${attempts} for ${testMode} tests (Turbopack)`
+      )
+      const NEXT_EXTERNAL_TESTS_FILTERS = getExternalTestFilter(
+        testMode,
+        'turbopack'
       )
       await execa('node', [...RUN_TESTS_ARGS, ...currentTests], {
         ...EXECA_OPTS_STDIO,
@@ -169,6 +166,7 @@ async function main() {
           ...process.env,
           NEXT_TEST_MODE: testMode,
           NEXT_TEST_VERSION: nextTestVersion,
+          NEXT_EXTERNAL_TESTS_FILTERS,
           IS_TURBOPACK_TEST: '1',
           TURBOPACK_BUILD: testMode === 'start' ? '1' : undefined,
           TURBOPACK_DEV: testMode === 'dev' ? '1' : undefined,
@@ -176,6 +174,19 @@ async function main() {
       })
     }
   }
+}
+
+function getExternalTestFilter(testMode, bundler) {
+  const filters = process.env.NEXT_EXTERNAL_TESTS_FILTERS
+    ? process.env.NEXT_EXTERNAL_TESTS_FILTERS
+    : testMode === 'deploy'
+      ? `test/${bundler}-deploy-tests-manifest.json`
+      : undefined
+
+  if (filters) {
+    console.log(`Applying external tests filter: ${filters}`)
+  }
+  return filters
 }
 
 main().catch((err) => {
