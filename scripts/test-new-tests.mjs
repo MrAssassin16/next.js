@@ -168,7 +168,8 @@ async function main() {
           NEXT_TEST_VERSION: nextTestVersion,
           NEXT_EXTERNAL_TESTS_FILTERS,
           IS_TURBOPACK_TEST: '1',
-          TURBOPACK_BUILD: testMode === 'start' ? '1' : undefined,
+          TURBOPACK_BUILD:
+            testMode === 'start' || testMode === 'deploy' ? '1' : undefined,
           TURBOPACK_DEV: testMode === 'dev' ? '1' : undefined,
         },
       })
