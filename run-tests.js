@@ -575,6 +575,9 @@ ${ENDGROUP}`)
 
       const handleOutput = (type) => (chunk) => {
         if (hideOutput) {
+          if (chunk.toString().includes('Deployment URL')) {
+            process.stdout.write(`${test}: ${chunk.toString()}`)
+          }
           outputChunks.push({ type, chunk })
         } else {
           process.stdout.write(chunk)
