@@ -97,7 +97,7 @@ jobs:
   test-deploy-turbopack:
     name: Run Deploy Tests (Turbopack)
     # Run after the webpack tests have completed to avoid rate limits
-    needs: [setup, test-deploy-webpack]
+    needs: [setup]
     uses: ./.github/workflows/build_reusable.yml
     secrets: inherit
     strategy:
@@ -123,7 +123,7 @@ jobs:
       overrideProxyAddress: ${{ inputs.overrideProxyAddress || '' }}
 
   report-test-results-to-datadog:
-    needs: [test-deploy-webpack, test-deploy-turbopack]
+    needs: [test-deploy-turbopack]
     if: ${{ always() }}
 
     runs-on: ubuntu-latest
@@ -214,8 +214,8 @@ jobs:
 
   update-prs:
     name: Update prs as ready for review
-    needs: [test-deploy-webpack, test-deploy-turbopack, create-draft-prs]
-    if: ${{ needs.test-deploy-webpack.result == 'success' && needs.test-deploy-turbopack.result == 'success' && github.repository_owner == 'vercel' && github.event_name == 'release' }}
+    needs: [test-deploy-turbopack, create-draft-prs]
+    if: ${{  needs.test-deploy-turbopack.result == 'success' && github.repository_owner == 'vercel' && github.event_name == 'release' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

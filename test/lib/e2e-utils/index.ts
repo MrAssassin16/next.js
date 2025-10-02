@@ -179,7 +179,6 @@ export async function createNext(
         rootSpan.traceChild('init next deploy instance').traceFn(() => {
           nextInstance = new NextDeployInstance({
             ...opts,
-            turbo: false,
           })
         })
       } else {
@@ -187,7 +186,6 @@ export async function createNext(
         rootSpan.traceChild('init next start instance').traceFn(() => {
           nextInstance = new NextStartInstance({
             ...opts,
-            turbo: false,
           })
         })
       }

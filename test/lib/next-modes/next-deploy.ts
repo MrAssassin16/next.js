@@ -124,35 +124,28 @@ export class NextDeployInstance extends NextInstance {
       additionalEnv.push(`IS_WEBPACK_TEST=1`)
     }
 
-    const deployRes = await execa(
-      'vercel',
-      [
-        'deploy',
-        '--build-env',
-        'NEXT_PRIVATE_TEST_MODE=e2e',
-        '--build-env',
-        'NEXT_TELEMETRY_DISABLED=1',
-        '--build-env',
-        'VERCEL_NEXT_BUNDLED_SERVER=1',
-        ...additionalEnv.flatMap((pair) => [
-          '--env',
-          pair,
-          '--build-env',
-          pair,
-        ]),
-        '--force',
-        ...vercelFlags,
-      ],
-      {
-        cwd: this.testDir,
-        env: vercelEnv,
-        reject: false,
-        // This will print deployment information earlier to the console so we
-        // don't have to wait until the deployment is complete to get the
-        // inspect URL.
-        stderr: 'inherit',
-      }
-    )
+    const args = [
+      'deploy',
+      '--build-env',
+      'NEXT_PRIVATE_TEST_MODE=e2e',
+      '--build-env',
+      'NEXT_TELEMETRY_DISABLED=1',
+      '--build-env',
+      'VERCEL_NEXT_BUNDLED_SERVER=1',
+      ...additionalEnv.flatMap((pair) => ['--env', pair, '--build-env', pair]),
+      '--force',
+      ...vercelFlags,
+    ]
+    console.log('running: vercel ' + args.join(' '))
+    const deployRes = await execa('vercel', args, {
+      cwd: this.testDir,
+      env: vercelEnv,
+      reject: false,
+      // This will print deployment information earlier to the console so we
+      // don't have to wait until the deployment is complete to get the
+      // inspect URL.
+      stderr: 'inherit',
+    })
 
     if (deployRes.exitCode !== 0) {
       throw new Error(
