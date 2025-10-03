@@ -75,9 +75,9 @@ jobs:
     secrets: inherit
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         group: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
-        max-parallel: 4
     with:
       afterBuild: |
         npm i -g vercel@latest && \
@@ -103,9 +103,9 @@ jobs:
     secrets: inherit
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         group: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
-        max-parallel: 4
     with:
       afterBuild: |
         npm i -g vercel@latest && \
