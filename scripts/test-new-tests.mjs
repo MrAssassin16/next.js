@@ -134,10 +134,7 @@ async function main() {
     // We apply the external tests filter before the process.env so that if
     // it's defined in the environment, it overrides the default filter.
     // This is required for supporting the experimental tests setup.
-    const NEXT_EXTERNAL_TESTS_FILTERS = getExternalTestFilter(
-      testMode,
-      'webpack'
-    )
+    const NEXT_EXTERNAL_TESTS_FILTERS = getExternalTestFilter(testMode)
 
     await execa('node', [...RUN_TESTS_ARGS, ...currentTests], {
       ...EXECA_OPTS_STDIO,
@@ -156,10 +153,7 @@ async function main() {
       console.log(
         `\n\nRun ${i + 1}/${attempts} for ${testMode} tests (Turbopack)`
       )
-      const NEXT_EXTERNAL_TESTS_FILTERS = getExternalTestFilter(
-        testMode,
-        'turbopack'
-      )
+      const NEXT_EXTERNAL_TESTS_FILTERS = getExternalTestFilter(testMode)
       await execa('node', [...RUN_TESTS_ARGS, ...currentTests], {
         ...EXECA_OPTS_STDIO,
         env: {
@@ -177,11 +171,11 @@ async function main() {
   }
 }
 
-function getExternalTestFilter(testMode, bundler) {
+function getExternalTestFilter(testMode) {
   const filters = process.env.NEXT_EXTERNAL_TESTS_FILTERS
     ? process.env.NEXT_EXTERNAL_TESTS_FILTERS
     : testMode === 'deploy'
-      ? `test/${bundler}-deploy-tests-manifest.json`
+      ? `test/deploy-tests-manifest.json`
       : undefined
 
   if (filters) {
