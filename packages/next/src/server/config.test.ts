@@ -115,7 +115,7 @@ describe('loadConfig', () => {
           },
         })
       ).rejects.toThrow(
-        /The experimental feature "experimental.cacheComponents" can only be enabled when using the latest canary version of Next.js./
+        'The experimental feature "experimental.ppr" has been removed in Next.js 16. Please use "experimental.cacheComponents" instead.'
       )
     })
 
@@ -157,21 +157,6 @@ describe('loadConfig', () => {
       delete process.env.__NEXT_VERSION
     })
 
-    it('errors when cacheComponents is enabled but PPR is disabled', async () => {
-      await expect(
-        loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-          customConfig: {
-            experimental: {
-              cacheComponents: true,
-              ppr: false,
-            },
-          },
-        })
-      ).rejects.toThrow(
-        '`experimental.ppr` can not be `false` when `experimental.cacheComponents` is `true`. PPR is implicitly enabled when Cache Components is enabled.'
-      )
-    })
-
     it('errors when rdcForNavigations is enabled but cacheComponents is disabled', async () => {
       await expect(
         loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
@@ -197,7 +182,7 @@ describe('loadConfig', () => {
           },
         })
       ).rejects.toThrow(
-        '`experimental.ppr` has been deprecated in favour of `experimental.cacheComponents`, `"incremental"` is no longer supported.'
+        'The experimental feature "experimental.ppr" has been removed in Next.js 16. Please use "experimental.cacheComponents" instead.'
       )
     })
 
@@ -211,48 +196,6 @@ describe('loadConfig', () => {
       })
 
       expect(result.experimental.rdcForNavigations).toBe(true)
-    })
-
-    it('allows explicitly disabling rdcForNavigations when ppr is enabled', async () => {
-      const result = await loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-        customConfig: {
-          experimental: {
-            ppr: true,
-            rdcForNavigations: false,
-          },
-        },
-      })
-
-      expect(result.experimental.rdcForNavigations).toBe(false)
-    })
-
-    it('errors when cacheComponents is enabled but PPR set to "incremental"', async () => {
-      await expect(
-        loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-          customConfig: {
-            experimental: {
-              cacheComponents: true,
-              ppr: 'incremental',
-            },
-          },
-        })
-      ).rejects.toThrow(
-        '`experimental.ppr` has been deprecated in favour of `experimental.cacheComponents`, `"incremental"` is no longer supported.'
-      )
-    })
-
-    it('errors when PPR set to "incremental"', async () => {
-      await expect(
-        loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-          customConfig: {
-            experimental: {
-              ppr: 'incremental',
-            },
-          },
-        })
-      ).rejects.toThrow(
-        '`experimental.ppr` has been deprecated in favour of `experimental.cacheComponents`, `"incremental"` is no longer supported.'
-      )
     })
 
     it('migrates experimental.dynamicIO to experimental.cacheComponents', async () => {
@@ -289,30 +232,6 @@ describe('loadConfig', () => {
       expect(result.experimental.cacheComponents).toBe(false)
       expect(result.experimental.dynamicIO).toBeUndefined()
 
-      delete process.env.__NEXT_VERSION
-    })
-
-    it('warns when using deprecated experimental.ppr', async () => {
-      process.env.__NEXT_VERSION = 'canary'
-
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation()
-
-      await loadConfig(PHASE_PRODUCTION_BUILD, __dirname, {
-        customConfig: {
-          experimental: {
-            ppr: true,
-          },
-        },
-        silent: false,
-      })
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '`experimental.ppr` has been deprecated in favour of `experimental.cacheComponents`'
-        )
-      )
-
-      consoleSpy.mockRestore()
       delete process.env.__NEXT_VERSION
     })
 
