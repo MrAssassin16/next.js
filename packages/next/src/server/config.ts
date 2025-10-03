@@ -380,14 +380,6 @@ function assignDefaultsAndValidate(
     })
   }
 
-  if (result.experimental.dynamicIO) {
-    throw new HardDeprecatedConfigError({
-      feature: 'experimental.dynamicIO',
-      replacement: 'experimental.cacheComponents',
-      version: '16',
-    })
-  }
-
   if (result.output === 'export') {
     if (result.i18n) {
       throw new Error(
