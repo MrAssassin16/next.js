@@ -68,31 +68,32 @@ jobs:
         name: Extract `next` version
         run: echo 'value=${{ fromJson(steps.nextPackageInfo.outputs.value).version }}' >> "$GITHUB_OUTPUT"
 
-  # test-deploy-webpack:
-  #   name: Run Deploy Tests (Webpack)
-  #   needs: setup
-  #   uses: ./.github/workflows/build_reusable.yml
-  #   secrets: inherit
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       group: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
-  #   with:
-  #     afterBuild: |
-  #       npm i -g vercel@latest && \
-  #       NEXT_E2E_TEST_TIMEOUT=240000 \
-  #       NEXT_TEST_MODE=deploy \
-  #       IS_WEBPACK_TEST=1 \
-  #       NEXT_EXTERNAL_TESTS_FILTERS="test/webpack-deploy-tests-manifest.json" \
-  #       NEXT_TEST_VERSION="${{ github.event.inputs.nextVersion || 'canary' }}" \
-  #       VERCEL_CLI_VERSION="${{ github.event.inputs.vercelCliVersion || 'vercel@latest' }}" \
-  #       node run-tests.js --timings -g ${{ matrix.group }} -c 2 --type e2e
-  #     skipNativeBuild: 'yes'
-  #     skipNativeInstall: 'no'
-  #     stepName: 'test-deploy-webpack-${{ matrix.group }}'
-  #     timeout_minutes: 180
-  #     runs_on_labels: '["ubuntu-latest"]'
-  #     overrideProxyAddress: ${{ inputs.overrideProxyAddress || '' }}
+  test-deploy-webpack:
+    name: Run Deploy Tests (Webpack)
+    needs: setup
+    uses: ./.github/workflows/build_reusable.yml
+    secrets: inherit
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
+        max-parallel: 4
+    with:
+      afterBuild: |
+        npm i -g vercel@latest && \
+        NEXT_E2E_TEST_TIMEOUT=240000 \
+        NEXT_TEST_MODE=deploy \
+        IS_WEBPACK_TEST=1 \
+        NEXT_EXTERNAL_TESTS_FILTERS="test/webpack-deploy-tests-manifest.json" \
+        NEXT_TEST_VERSION="${{ github.event.inputs.nextVersion || 'canary' }}" \
+        VERCEL_CLI_VERSION="${{ github.event.inputs.vercelCliVersion || 'vercel@latest' }}" \
+        node run-tests.js --timings -g ${{ matrix.group }} -c 2 --type e2e
+      skipNativeBuild: 'yes'
+      skipNativeInstall: 'no'
+      stepName: 'test-deploy-webpack-${{ matrix.group }}'
+      timeout_minutes: 180
+      runs_on_labels: '["ubuntu-latest"]'
+      overrideProxyAddress: ${{ inputs.overrideProxyAddress || '' }}
 
   test-deploy-turbopack:
     name: Run Deploy Tests (Turbopack)
@@ -104,6 +105,7 @@ jobs:
       fail-fast: false
       matrix:
         group: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
+        max-parallel: 4
     with:
       afterBuild: |
         npm i -g vercel@latest && \
@@ -123,7 +125,7 @@ jobs:
       overrideProxyAddress: ${{ inputs.overrideProxyAddress || '' }}
 
   report-test-results-to-datadog:
-    needs: [test-deploy-turbopack]
+    needs: [test-deploy-turbopack, test-deploy-webpack]
     if: ${{ always() }}
 
     runs-on: ubuntu-latest
@@ -214,8 +216,8 @@ jobs:
 
   update-prs:
     name: Update prs as ready for review
-    needs: [test-deploy-turbopack, create-draft-prs]
-    if: ${{  needs.test-deploy-turbopack.result == 'success' && github.repository_owner == 'vercel' && github.event_name == 'release' }}
+    needs: [test-deploy-turbopack, test-deploy-webpack, create-draft-prs]
+    if: ${{ needs.test-deploy-webpack.result == 'success' &&  needs.test-deploy-turbopack.result == 'success' && github.repository_owner == 'vercel' && github.event_name == 'release' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
