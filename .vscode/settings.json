@@ -119,7 +119,5 @@
     "${workspaceRoot}/.git-blame-ignore-revs"
   ],
   "astGrep.serverPath": "node_modules/@ast-grep/cli/ast-grep",
-  "rust-analyzer.imports.prefix": "crate",
-  // Disable Biome for this workspace since it uses ESLint + Prettier
-  "biome.enabled": false
+  "rust-analyzer.imports.prefix": "crate"
 }
