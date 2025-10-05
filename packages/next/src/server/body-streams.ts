@@ -2,6 +2,8 @@ import type { IncomingMessage } from 'http'
 import type { Readable } from 'stream'
 import { PassThrough } from 'stream'
 
+const DEFAULT_BODY_CLONE_SIZE_LIMIT = 50 * 1024 * 1024 // 50MB
+
 export function requestToBodyStream(
   context: { ReadableStream: typeof ReadableStream },
   KUint8Array: typeof Uint8Array,
@@ -76,13 +78,38 @@ export function getCloneableBody<T extends IncomingMessage>(
       const input = buffered ?? readable
       const p1 = new PassThrough()
       const p2 = new PassThrough()
+
+      let bytesRead = 0
+      const sizeLimit = DEFAULT_BODY_CLONE_SIZE_LIMIT
+      let limitExceeded = false
+
       input.on('data', (chunk) => {
+        if (limitExceeded) return
+
+        bytesRead += chunk.length
+
+        if (bytesRead > sizeLimit) {
+          limitExceeded = true
+          const error = new Error(
+            `Request body exceeded limit of ${sizeLimit} bytes`
+          )
+          p1.destroy(error)
+          p2.destroy(error)
+          return
+        }
+
         p1.push(chunk)
         p2.push(chunk)
       })
       input.on('end', () => {
-        p1.push(null)
-        p2.push(null)
+        if (!limitExceeded) {
+          p1.push(null)
+          p2.push(null)
+        }
+      })
+      input.on('error', (err) => {
+        p1.destroy(err)
+        p2.destroy(err)
       })
       buffered = p2
       return p1
